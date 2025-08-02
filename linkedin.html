@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini LinkedIn</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="auth-container">
+    <h2>Login / Register</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+    <p id="auth-error" class="error"></p>
+  </div>
+
+  <div id="app-container" class="hidden">
+    <div class="navbar">
+      <span id="user-email"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="profile-section">
+      <h2>Your Profile</h2>
+      <input type="text" id="name" placeholder="Name">
+      <input type="text" id="bio" placeholder="Bio">
+      <button onclick="updateProfile()">Update Profile</button>
+    </div>
+
+    <div class="post-section">
+      <h2>Create Post</h2>
+      <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+      <button onclick="createPost()">Post</button>
+    </div>
+
+    <div class="feed-section">
+      <h2>Public Feed</h2>
+      <div id="feed"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f4f4f4;
+}
+
+input, textarea {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+button {
+  margin-right: 10px;
+  padding: 10px 15px;
+  background-color: #0a66c2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #004182;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  background: #0a66c2;
+  color: white;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+.error {
+  color: red;
+}
+
+.feed-post {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 0 3px rgba(0,0,0,0.1);
+}
+let currentUser = null;
+let users = {}; // In-memory user store
+let posts = [];
+
+function register() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (users[email]) {
+    showError("User already exists. Please login.");
+    return;
+  }
+
+  users[email] = { email, password, name: "", bio: "" };
+  showError("Registered successfully! You can now login.");
+}
+
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (!users[email] || users[email].password !== password) {
+    showError("Invalid email or password.");
+    return;
+  }
+
+  currentUser = users[email];
+  document.getElementById("user-email").textContent = currentUser.email;
+  document.getElementById("auth-container").classList.add("hidden");
+  document.getElementById("app-container").classList.remove("hidden");
+  document.getElementById("name").value = currentUser.name;
+  document.getElementById("bio").value = currentUser.bio;
+  renderFeed();
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById("auth-container").classList.remove("hidden");
+  document.getElementById("app-container").classList.add("hidden");
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+}
+
+function updateProfile() {
+  if (!currentUser) return;
+  currentUser.name = document.getElementById("name").value;
+  currentUser.bio = document.getElementById("bio").value;
+  alert("Profile updated!");
+}
+
+function createPost() {
+  const content = document.getElementById("post-content").value;
+  if (!content) return;
+
+  posts.unshift({
+    user: currentUser.name || currentUser.email,
+    content
+  });
+
+  document.getElementById("post-content").value = "";
+  renderFeed();
+}
+
+function renderFeed() {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  posts.forEach(post => {
+    const div = document.createElement("div");
+    div.className = "feed-post";
+    div.innerHTML = `<strong>${post.user}</strong><p>${post.content}</p>`;
+    feed.appendChild(div);
+  });
+}
+
+function showError(message) {
+  document.getElementById("auth-error").textContent = message;
+}
